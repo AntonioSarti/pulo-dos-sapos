@@ -1,0 +1,801 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pulo dos Sapos</title>
+    <!-- Tailwind CSS for modern responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Fredoka for kid-friendly typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        /* Custom animations and glowing effects */
+        @keyframes floatCloud {
+            0% { transform: translateX(-100px); }
+            100% { transform: translateX(calc(100vw + 100px)); }
+        }
+        .cloud-animation {
+            animation: floatCloud 35s linear infinite;
+        }
+        @keyframes lilyPadBob {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-4px) scale(1.02); }
+        }
+        .lily-bob {
+            animation: lilyPadBob 3s ease-in-out infinite;
+        }
+        @keyframes jumpFrog {
+            0% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-45px) scale(1.15, 0.85); }
+            100% { transform: translateY(0) scale(1); }
+        }
+        .jump-anim {
+            animation: jumpFrog 0.4s ease-in-out;
+        }
+        /* Pixel-like frog sprites built from CSS so they stay crisp at any size. */
+        .frog-sprite {
+            position: relative;
+            width: 42px;
+            height: 30px;
+            border-radius: 48% 48% 42% 42%;
+            background: var(--frog-color);
+            box-shadow: inset 0 -5px 0 var(--frog-shadow), 0 4px 7px #0f172a88;
+            image-rendering: pixelated;
+            transition: filter .2s ease;
+        }
+        .frog-sprite:hover { filter: brightness(1.12); }
+        .frog-sprite::before, .frog-sprite::after {
+            content: "";
+            position: absolute;
+            top: -7px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: var(--frog-color);
+            box-shadow: inset 0 -2px 0 var(--frog-shadow);
+        }
+        .frog-sprite::before { left: 3px; }
+        .frog-sprite::after { right: 3px; }
+        .frog-eyes {
+            position: absolute;
+            z-index: 1;
+            top: -3px;
+            left: 8px;
+            width: 5px;
+            height: 6px;
+            border-radius: 50%;
+            background: #172033;
+            box-shadow: 20px 0 #172033;
+        }
+        .frog-belly {
+            position: absolute;
+            left: 10px;
+            bottom: 4px;
+            width: 22px;
+            height: 9px;
+            border-radius: 50%;
+            background: #ffffff55;
+        }
+        .frog-feet {
+            position: absolute;
+            bottom: -3px;
+            left: 2px;
+            width: 10px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--frog-shadow);
+            box-shadow: 28px 0 var(--frog-shadow);
+        }
+        .frog-direction {
+            position: absolute;
+            z-index: 2;
+            bottom: -12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 24px;
+            border: 2px solid #ffffffd9;
+            border-radius: 999px;
+            color: #fff;
+            background: linear-gradient(145deg, #ffffff70 0%, transparent 48%), linear-gradient(180deg, var(--frog-color), var(--frog-shadow));
+            box-shadow: 0 3px 7px #0f172aaa, inset 0 2px 2px #ffffffaa, inset 0 -3px 3px #0003;
+            font: 700 21px/16px Arial, sans-serif;
+            text-shadow: 0 2px 2px #0009;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(3px) scale(.85);
+            pointer-events: none;
+            transition: opacity .2s ease, transform .2s ease, filter .2s ease, visibility .2s ease;
+        }
+        #board-container > div:hover .frog-direction {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+            filter: brightness(1.12);
+        }
+        .frog-direction::before { content: ""; }
+        .frog-direction.right::before { content: "➜"; }
+        .frog-direction.left::before { content: "➜"; transform: rotate(180deg); }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .shake-anim {
+            animation: shake 0.3s ease-in-out;
+        }
+        .water-gradient {
+            background: linear-gradient(180deg, #1e3a8a 0%, #0284c7 40%, #0369a1 100%);
+        }
+        .lily-stone {
+            background: linear-gradient(155deg, #c8a77b 0%, #9a7148 34%, #775333 70%, #513824 100%);
+            border: 2px solid #ead2ad66;
+            box-shadow: inset 0 3px 5px #fff4dd55, inset 0 -5px 7px #38231366, 0 7px 10px #082f4966;
+            transition: transform .2s ease, filter .2s ease, box-shadow .2s ease;
+        }
+        .lily-stone:hover {
+            filter: brightness(1.12);
+            transform: translateY(-2px);
+            box-shadow: inset 0 3px 5px #fff4dd66, inset 0 -5px 7px #38231355, 0 10px 13px #082f4980;
+        }
+        .stone-highlight {
+            position: absolute;
+            width: 27%;
+            height: 20%;
+            top: 18%;
+            left: 21%;
+            border-radius: 50%;
+            background: #fff1d066;
+            filter: blur(1px);
+            transform: rotate(-16deg);
+        }
+        .stone-speckle {
+            position: absolute;
+            width: 4px;
+            height: 3px;
+            border-radius: 50%;
+            background: #f3dfbd66;
+            bottom: 27%;
+            right: 25%;
+            box-shadow: -14px -4px 0 #422d1d55, 7px -11px 0 #f3dfbd44;
+        }
+        #board-container {
+            flex-wrap: nowrap;
+            width: 100%;
+            gap: 8px;
+            gap: clamp(2px, 1.1vw, 16px);
+        }
+        #board-container > div {
+            flex: 0 1 80px;
+            min-width: 0;
+            padding-left: 4px;
+            padding-right: 4px;
+            padding-left: clamp(0px, .4vw, 8px);
+            padding-right: clamp(0px, .4vw, 8px);
+        }
+        #board-container .lily-stone {
+            width: 100%;
+            max-width: 80px;
+            min-width: 0;
+        }
+        @media (max-width: 640px) {
+            #board-container > div { flex-basis: 0; }
+            #board-container .lily-stone { height: 42px; }
+            #board-container .lily-stone { height: clamp(34px, 9vw, 48px); }
+            #board-container .frog-sprite { transform: scale(.82); }
+        }
+        @media (hover: none), (pointer: coarse) {
+            #board-container .frog-direction {
+                opacity: 1;
+                visibility: visible;
+                transform: none;
+            }
+        }
+        .sky-gradient {
+            background: linear-gradient(180deg, #0f172a 0%, #1e3a8a 50%, #3b82f6 100%);
+        }
+        @keyframes fireflyFloat {
+            0%, 100% { transform: translate(0, 0) rotate(-8deg); }
+            50% { transform: translate(-7px, -10px) rotate(8deg); }
+        }
+        @keyframes fireflyGlow {
+            0%, 100% { opacity: .65; transform: scale(.85); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        .firefly {
+            position: absolute;
+            z-index: 2;
+            right: -11px;
+            bottom: -10px;
+            width: 30px;
+            height: 32px;
+            animation: fireflyFloat 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 5px #a3e635);
+        }
+        .firefly-glow {
+            position: absolute;
+            inset: 4px;
+            border-radius: 50%;
+            background: #d9f99d;
+            filter: blur(8px);
+            animation: fireflyGlow 1.8s ease-in-out infinite;
+        }
+        .firefly-body {
+            position: absolute;
+            left: 11px;
+            top: 11px;
+            width: 9px;
+            height: 15px;
+            border-radius: 60% 60% 50% 50%;
+            background: linear-gradient(90deg, #365314, #84cc16 45%, #365314);
+            box-shadow: 0 0 5px #bef264;
+        }
+        .firefly-body::before, .firefly-body::after {
+            content: "";
+            position: absolute;
+            top: -5px;
+            width: 7px;
+            height: 9px;
+            border-radius: 80% 20% 70% 25%;
+            background: #e0f2feaa;
+            border: 1px solid #ffffff88;
+        }
+        .firefly-body::before { left: -5px; transform: rotate(-25deg); }
+        .firefly-body::after { right: -5px; transform: scaleX(-1) rotate(-25deg); }
+        .firefly-light {
+            position: absolute;
+            left: 12px;
+            bottom: -4px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #ecfccb;
+            box-shadow: 0 0 5px 2px #bef264, 0 0 13px 5px #a3e63599;
+        }
+    </style>
+</head>
+<body class="sky-gradient h-full flex flex-col justify-between overflow-x-hidden text-white m-0">
+
+    <!-- Background Clouds & Stars -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div class="absolute top-10 left-10 text-yellow-200 opacity-60 text-xs animate-pulse"><i class="fa-solid fa-star"></i></div>
+        <div class="absolute top-16 right-24 text-yellow-200 opacity-80 text-sm animate-pulse"><i class="fa-solid fa-star"></i></div>
+        <div class="absolute top-8 left-1/3 text-yellow-100 opacity-70 text-xs animate-pulse"><i class="fa-solid fa-star"></i></div>
+        <div class="absolute top-[18%] left-[12%] text-sky-100/80 text-[10px] animate-pulse"><i class="fa-solid fa-star"></i></div>
+        <div class="absolute top-[22%] left-[27%] text-yellow-100/70 text-xs animate-pulse" style="animation-delay:.7s"><i class="fa-solid fa-star"></i></div>
+        <div class="absolute top-[11%] left-[58%] text-blue-100/80 text-[9px] animate-pulse" style="animation-delay:1.1s"><i class="fa-solid fa-star"></i></div>
+        <div class="absolute top-[29%] left-[72%] text-yellow-100/75 text-sm animate-pulse" style="animation-delay:.4s"><i class="fa-solid fa-star"></i></div>
+        <div class="absolute top-[14%] right-[8%] text-sky-100/75 text-xs animate-pulse" style="animation-delay:1.5s"><i class="fa-solid fa-star"></i></div>
+        <div class="absolute top-[34%] right-[22%] text-yellow-100/70 text-[9px] animate-pulse" style="animation-delay:.9s"><i class="fa-solid fa-star"></i></div>
+        <div class="absolute top-[39%] left-[6%] text-blue-100/60 text-[9px] animate-pulse" style="animation-delay:1.3s"><i class="fa-solid fa-star"></i></div>
+        
+        <!-- Glowing Moon & Firefly -->
+        <div class="absolute top-6 left-8 bg-amber-100 w-16 h-16 rounded-full shadow-[0_0_35px_rgba(253,230,138,0.8)] flex items-center justify-center">
+            <div class="firefly" aria-hidden="true">
+                <span class="firefly-glow"></span>
+                <span class="firefly-body"></span>
+                <span class="firefly-light"></span>
+            </div>
+        </div>
+
+        <!-- Floating Clouds -->
+        <div class="cloud-animation absolute top-12 opacity-80 text-white text-6xl">
+            <i class="fa-solid fa-cloud"></i>
+        </div>
+        <div class="cloud-animation absolute top-24 opacity-60 text-white text-5xl" style="animation-delay: -15s;">
+            <i class="fa-solid fa-cloud"></i>
+        </div>
+    </div>
+
+    <!-- Top Header Bar -->
+    <header class="relative z-10 w-full max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-3 bg-blue-900/60 backdrop-blur-md px-4 py-2 rounded-2xl border border-blue-400/30 shadow-lg">
+            <div class="text-xl leading-none" aria-hidden="true">
+                🐸
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-wide text-yellow-300 drop-shadow">Pulo dos Sapos</h1>
+                <p class="text-sm text-blue-200" id="header-level-text">Fase 1 de 5</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <!-- Tutorial Modal Button -->
+            <button onclick="openModal('tutorialModal')" class="bg-amber-500 hover:bg-amber-400 text-amber-950 px-3.5 py-2 rounded-xl font-bold text-sm shadow-md transition transform hover:scale-105 flex items-center space-x-1.5 border border-amber-300/50">
+                <i class="fa-solid fa-book-open"></i>
+                <span class="hidden sm:inline">Como Jogar</span>
+            </button>
+            <!-- Sound Toggle Button -->
+            <button id="soundToggleBtn" onclick="toggleSound()" class="bg-blue-800/80 hover:bg-blue-700 text-white w-10 h-10 rounded-xl font-bold flex items-center justify-center shadow-md transition border border-blue-400/30">
+                <i id="soundIcon" class="fa-solid fa-volume-high"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Stage -->
+    <main class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 max-w-5xl mx-auto w-full my-auto">
+        
+        <!-- Level Selector / Menu Bar -->
+        <div class="flex flex-wrap justify-center gap-2 mb-4 bg-black/30 p-2.5 rounded-2xl backdrop-blur-sm border border-white/10">
+            <span class="text-xs font-bold text-blue-200 self-center mr-2"><i class="fa-solid fa-layer-group"></i> Fases:</span>
+            <button onclick="switchLevel(1)" id="btn-lvl-1" class="level-btn px-3 py-1.5 rounded-xl text-sm font-bold bg-emerald-600 text-white shadow transition transform hover:scale-105">Fase 1</button>
+            <button onclick="switchLevel(2)" id="btn-lvl-2" class="level-btn px-3 py-1.5 rounded-xl text-sm font-bold bg-slate-700/80 text-slate-300 shadow transition transform hover:scale-105">Fase 2</button>
+            <button onclick="switchLevel(3)" id="btn-lvl-3" class="level-btn px-3 py-1.5 rounded-xl text-sm font-bold bg-slate-700/80 text-slate-300 shadow transition transform hover:scale-105">Fase 3</button>
+            <button onclick="switchLevel(4)" id="btn-lvl-4" class="level-btn px-3 py-1.5 rounded-xl text-sm font-bold bg-slate-700/80 text-slate-300 shadow transition transform hover:scale-105">Fase 4</button>
+            <button onclick="switchLevel(5)" id="btn-lvl-5" class="level-btn px-3 py-1.5 rounded-xl text-sm font-bold bg-slate-700/80 text-slate-300 shadow transition transform hover:scale-105">Fase 5</button>
+        </div>
+
+        <!-- Game Info & Stats Panel -->
+        <div class="w-full flex justify-between items-center bg-blue-950/70 border border-blue-500/30 rounded-2xl p-4 mb-4 shadow-xl backdrop-blur-md">
+            <div>
+                <h2 id="level-title" class="text-xl font-bold text-yellow-300">Fase 1: Encontro na Lagoa</h2>
+                <p id="level-desc" class="text-sm text-blue-200">Troque os sapos verdes da esquerda para a direita e os vermelhos da direita para a esquerda!</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="bg-blue-900/80 px-3 py-1.5 rounded-xl border border-blue-400/30 text-center">
+                    <span class="block text-[10px] text-blue-300 uppercase font-bold">Movimentos</span>
+                    <span id="move-counter" class="text-xl font-extrabold text-yellow-300">0</span>
+                </div>
+                <button onclick="resetCurrentLevel()" class="bg-rose-600 hover:bg-rose-500 text-white px-3.5 py-2 rounded-xl font-bold text-sm shadow-md transition transform hover:scale-105 flex items-center space-x-1 border border-rose-400/40">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>Reiniciar</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- The Lagoon Stage -->
+        <div class="relative w-full rounded-3xl water-gradient border-4 border-emerald-600/40 shadow-2xl p-6 sm:p-10 overflow-hidden flex flex-col items-center justify-center min-h-[320px]">
+            
+            <!-- Reeds and Cattails (Scenery elements) -->
+            <div class="absolute bottom-2 left-4 text-emerald-400/40 text-4xl pointer-events-none flex space-x-2">
+                <i class="fa-solid fa-spa"></i><i class="fa-solid fa-spa hidden sm:inline"></i>
+            </div>
+            <div class="absolute bottom-2 right-4 text-emerald-400/40 text-4xl pointer-events-none flex space-x-2">
+                <i class="fa-solid fa-spa"></i><i class="fa-solid fa-spa hidden sm:inline"></i>
+            </div>
+
+            <!-- Feedback / Error Banner -->
+            <div id="feedback-alert" class="absolute top-3 bg-rose-600/90 text-white px-4 py-1.5 rounded-xl text-sm font-bold shadow-lg transition-all duration-300 opacity-0 pointer-events-none transform -translate-y-2 z-30">
+                Movimento inválido! O sapinho não pode recuar!
+            </div>
+
+            <!-- Board Path / Stones (Pedras na Lagoa) -->
+            <div id="board-container" class="flex justify-center items-center z-10 my-4">
+                <!-- Dynamically generated stones and frogs will appear here -->
+            </div>
+
+        </div>
+
+        <!-- Legend / Rules helper, positioned below the lagoon -->
+        <div class="mt-3 mb-2 text-center z-10">
+            <p class="text-sm font-medium text-blue-50 bg-slate-950/40 px-4 py-2 rounded-2xl inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 border border-sky-200/20 shadow-lg">
+                <i class="fa-solid fa-circle-info text-yellow-300 mr-1"></i>
+                <span>Verdes andam só para <b class="text-emerald-300">Direita</b></span>
+                <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-emerald-400/20 text-emerald-200 border border-emerald-200/40 shadow-inner text-sm" aria-hidden="true">➜</span>
+                <span class="text-sky-200/70 px-1">|</span>
+                <span>Vermelhos andam só para <b class="text-rose-300">Esquerda</b></span>
+                <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-400/20 text-rose-200 border border-rose-200/40 shadow-inner text-sm" aria-hidden="true">⬅</span>
+            </p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="relative z-10 text-center py-3 text-xs text-blue-300/80">
+        • Desenvolvido por Antonio C. G. Sarti com HTML5, Tailwind & JavaScript • Baseado no Desafio Clássico Frog Hop •
+    </footer>
+
+
+    <!-- TUTORIAL -->
+    <div id="tutorialModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-2xl w-full p-6 sm:p-8 text-white shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-3 border-b border-slate-800 pb-3">
+                <h3 class="text-2xl sm:text-3xl font-bold text-amber-300 flex items-center space-x-2">
+                    <span>🐸 Como Jogar com os Sapinhos!</span>
+                </h3>
+                <button onclick="closeModal('tutorialModal')" class="text-slate-400 hover:text-white text-xl font-bold bg-slate-800 w-8 h-8 rounded-full flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4 text-lg text-slate-200">
+                <div class="flex items-start space-x-4 bg-slate-800/80 p-4 sm:p-5 rounded-2xl border border-slate-700">
+                    <div class="w-14 h-12 shrink-0 flex items-center justify-center" aria-hidden="true"><span class="frog-sprite" style="--frog-color:#22c55e;--frog-shadow:#15803d"><span class="frog-eyes"></span><span class="frog-belly"></span><span class="frog-feet"></span></span></div>
+                    <div>
+                        <h4 class="text-xl font-bold text-emerald-300">Sapos Verdes</h4>
+                        <p class="text-base sm:text-lg text-slate-200">Come&ccedil;am &agrave; esquerda e seguem para a <b>direita</b>. Clique em um sapo verde para mov&ecirc;-lo.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-4 bg-slate-800/80 p-4 sm:p-5 rounded-2xl border border-slate-700">
+                    <div class="w-14 h-12 shrink-0 flex items-center justify-center" aria-hidden="true"><span class="frog-sprite" style="--frog-color:#ef4444;--frog-shadow:#b91c1c"><span class="frog-eyes"></span><span class="frog-belly"></span><span class="frog-feet"></span></span></div>
+                    <div>
+                        <h4 class="text-xl font-bold text-rose-300">Sapos Vermelhos</h4>
+                        <p class="text-base sm:text-lg text-slate-200">Come&ccedil;am &agrave; direita e seguem para a <b>esquerda</b>. Clique em um sapo vermelho para mov&ecirc;-lo.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-4 bg-slate-800/80 p-4 sm:p-5 rounded-2xl border border-slate-700">
+                    <div class="text-3xl" aria-hidden="true">&#x1F9ED;</div>
+                    <div>
+                        <h4 class="text-xl font-bold text-yellow-300">Como pular nas pedras</h4>
+                        <p class="text-base sm:text-lg text-slate-200">Clique em um sapo para avan&ccedil;ar at&eacute; a pedra vazia ao lado ou pular por cima de outro sapo.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-4 bg-slate-800/80 p-4 sm:p-5 rounded-2xl border border-slate-700">
+                    <div class="text-3xl" aria-hidden="true">&#x1F9ED;</div>
+                    <div>
+                        <h4 class="text-xl font-bold text-cyan-300">Objetivo do Jogo</h4>
+                        <p class="text-base sm:text-lg text-slate-200">Leve os sapos verdes para a direita e os vermelhos para a esquerda. Troque todos de lado para vencer!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 text-center">
+                <button onclick="closeModal('tutorialModal')" class="bg-amber-500 hover:bg-amber-400 text-amber-950 px-7 py-3 text-lg rounded-xl font-bold shadow-lg transition transform hover:scale-105"> Jogar </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VICTORY -->
+    <div id="victoryModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-emerald-500/50 rounded-3xl max-w-md w-full p-6 text-white shadow-2xl text-center">
+            <div class="text-5xl mb-2 animate-bounce">🎉🐸✨</div>
+            <h3 class="text-2xl font-bold text-yellow-300 mb-1">Parabéns! Fase Concluída!</h3>
+            <p id="victory-text" class="text-sm text-blue-200 mb-4">Você ajudou os sapinhos a trocarem de lado com sucesso!</p>
+            
+            <div class="bg-blue-950/60 p-4 rounded-2xl mb-5 border border-blue-500/30">
+                <div class="text-xs text-blue-300">Total de Movimentos</div>
+                <div id="victory-moves" class="text-3xl font-extrabold text-yellow-300">12</div>
+            </div>
+
+            <div class="flex space-x-3 justify-center">
+                <button onclick="resetCurrentLevel(); closeModal('victoryModal');" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm transition">Jogar de Novo</button>
+                <button id="next-level-btn" onclick="nextLevel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg transition transform hover:scale-105">Próxima Fase ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME OVER / DEADLOCK MODAL -->
+    <div id="gameOverModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-rose-500/50 rounded-3xl max-w-md w-full p-6 text-white shadow-2xl text-center">
+            <div class="text-5xl mb-2">😢🐸🚧</div>
+            <h3 class="text-2xl font-bold text-rose-400 mb-1">Ops! Sapinhos Presos!</h3>
+            <p class="text-sm text-slate-300 mb-5">Não há mais movimentos possíveis sem recuar. Vamos tentar de novo?</p>
+            
+            <button onclick="resetCurrentLevel(); closeModal('gameOverModal');" class="bg-rose-600 hover:bg-rose-500 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg transition transform hover:scale-105">
+                <i class="fa-solid fa-rotate-right mr-1"></i> Tentar Novamente
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Audio Engine using Web Audio API
+        let soundEnabled = true;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContextClass) return;
+                try {
+                    audioCtx = new AudioContextClass();
+                } catch (error) {
+                    audioCtx = null;
+                }
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'jump') {
+                // Happy jump sound (boing pitch up)
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(600, now + 0.15);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } else if (type === 'error') {
+                // Error sound (low buzz)
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.setValueAtTime(100, now + 0.1);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'win') {
+                // Victory chime
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.setValueAtTime(550, now + 0.15);
+                osc.frequency.setValueAtTime(800, now + 0.3);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            if (soundEnabled) {
+                icon.className = "fa-solid fa-volume-high";
+                playSound('jump');
+            } else {
+                icon.className = "fa-solid fa-volume-xmark";
+            }
+        }
+
+        // Game State
+        let currentLevel = 1;
+        let maxUnlockedLevel = 1;
+        let movesCount = 0;
+        let boardState = []; 
+        // 1 = Green frog (moves right -> increases index)
+        // -1 = Red/Orange frog (moves left -> decreases index)
+        // 0 = Empty stone
+
+        const levelData = {
+            1: { pairs: 1, title: "Fase 1: O Primeiro Salto", desc: "1 sapo verde e 1 sapo vermelho (3 pedras)." },
+            2: { pairs: 2, title: "Fase 2: Encontro na Lagoa", desc: "2 sapos verdes e 2 vermelhos (5 pedras)." },
+            3: { pairs: 3, title: "Fase 3: Salto Duplo na Margem", desc: "3 sapos verdes e 3 vermelhos (7 pedras)." },
+            4: { pairs: 4, title: "Fase 4: Dança das Cores", desc: "4 sapos verdes e 4 vermelhos (9 pedras)." },
+            5: { pairs: 5, title: "Fase 5: O Grande Desafio do Lago", desc: "5 sapos verdes e 5 vermelhos (11 pedras)!" }
+        };
+
+        function loadLevel(lvl) {
+            currentLevel = lvl;
+            movesCount = 0;
+            updateUIStats();
+
+            const pairs = levelData[lvl].pairs;
+            boardState = [];
+
+            // Green frogs (1) on the left
+            for (let i = 0; i < pairs; i++) {
+                boardState.push(1);
+            }
+            // Empty stone (0) in the middle
+            boardState.push(0);
+            // Red frogs (-1) on the right
+            for (let i = 0; i < pairs; i++) {
+                boardState.push(-1);
+            }
+
+            renderBoard();
+        }
+
+        function updateUIStats() {
+            document.getElementById('move-counter').textContent = movesCount;
+            document.getElementById('header-level-text').textContent = `Fase ${currentLevel} de 5`;
+            document.getElementById('level-title').textContent = levelData[currentLevel].title;
+            document.getElementById('level-desc').textContent = levelData[currentLevel].desc;
+
+            // Update level buttons styling
+            for (let i = 1; i <= 5; i++) {
+                const btn = document.getElementById(`btn-lvl-${i}`);
+                if (btn) {
+                    if (i === currentLevel) {
+                        btn.className = "level-btn px-3 py-1.5 rounded-xl text-sm font-bold bg-emerald-600 text-white shadow transition transform scale-105";
+                    } else if (i <= maxUnlockedLevel) {
+                        btn.className = "level-btn px-3 py-1.5 rounded-xl text-sm font-bold bg-blue-700/80 text-white shadow transition transform hover:scale-105";
+                    } else {
+                        btn.className = "level-btn px-3 py-1.5 rounded-xl text-sm font-bold bg-slate-700/80 text-slate-500 cursor-not-allowed";
+                    }
+                }
+            }
+        }
+
+        function handleFrogClick(index) {
+            const frogType = boardState[index];
+            if (frogType === 0) return; // clicked empty stone
+            
+            let targetIndex = -1;
+            const step = frogType; // 1 for right, -1 for left
+
+            // Check adjacent stone
+            if (boardState[index + step] === 0) {
+                targetIndex = index + step;
+            } 
+            // Check jump over 1 frog
+            else if (boardState[index + (step * 2)] === 0 && boardState[index + step] !== 0) {
+                targetIndex = index + (step * 2);
+            }
+
+            if (targetIndex !== -1) {
+                // Valid move! Execute move
+                playSound('jump');
+                boardState[targetIndex] = frogType;
+                boardState[index] = 0;
+                movesCount++;
+                updateUIStats();
+                renderBoard(targetIndex);
+
+                // Check win condition or deadlock
+                setTimeout(checkGameStatus, 350);
+            } else {
+                // Invalid move / retreating or blocked
+                playSound('error');
+                showFeedback("Movimento inválido! O sapinho não pode recuar ou o caminho está bloqueado.");
+                shakeStone(index);
+            }
+        }
+
+        function renderBoard(animatedIndex = -1) {
+            const container = document.getElementById('board-container');
+            container.innerHTML = '';
+
+            boardState.forEach((val, idx) => {
+                const stoneDiv = document.createElement('div');
+                stoneDiv.className = "flex flex-col items-center justify-center p-2 relative lily-bob transition-all duration-300";
+                
+                // Stone element (Pedra na lagoa)
+                let html = `
+                    <div class="lily-stone w-16 h-12 sm:w-20 sm:h-14 rounded-[48%_44%_46%_42%] flex items-center justify-center relative cursor-pointer group"
+                         onclick="handleFrogClick(${idx})">
+                        <div class="stone-highlight"></div>
+                        <div class="stone-speckle"></div>
+                `;
+
+                if (val !== 0) {
+                    // Frog element
+                    const isGreen = val === 1;
+                    const frogColors = isGreen
+                        ? '--frog-color:#22c55e;--frog-shadow:#15803d;'
+                        : '--frog-color:#ef4444;--frog-shadow:#b91c1c;';
+                    const animClass = (idx === animatedIndex) ? 'jump-anim' : '';
+
+                    html += `
+                        <div id="frog-${idx}" class="absolute -top-5 sm:-top-6 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center transform transition hover:scale-110 ${animClass}"
+                             title="${isGreen ? 'Sapo Verde (Direita)' : 'Sapo Vermelho (Esquerda)'}">
+                            <span class="frog-sprite" style="${frogColors}" aria-hidden="true">
+                                <span class="frog-eyes"></span>
+                                <span class="frog-belly"></span>
+                                <span class="frog-feet"></span>
+                            </span>
+                            <!-- Mini direction indicator -->
+                            <span class="frog-direction ${isGreen ? 'right' : 'left'}" aria-hidden="true"></span>
+                        </div>
+                    `;
+                }
+
+                html += `</div>`;
+                stoneDiv.innerHTML = html;
+                container.appendChild(stoneDiv);
+            });
+        }
+
+        function shakeStone(index) {
+            const frogEl = document.getElementById(`frog-${index}`);
+            if (frogEl) {
+                frogEl.classList.add('shake-anim');
+                setTimeout(() => frogEl.classList.remove('shake-anim'), 300);
+            }
+        }
+
+        function showFeedback(msg) {
+            const alertBox = document.getElementById('feedback-alert');
+            alertBox.textContent = msg;
+            alertBox.classList.remove('opacity-0', '-translate-y-2');
+            alertBox.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                alertBox.classList.remove('opacity-100', 'translate-y-0');
+                alertBox.classList.add('opacity-0', '-translate-y-2');
+            }, 2500);
+        }
+
+        function checkGameStatus() {
+            const pairs = levelData[currentLevel].pairs;
+            
+            // Check Win Condition:
+            // In winning state, all red frogs (-1) are on the left (first 'pairs' positions)
+            // and all green frogs (1) are on the right (last 'pairs' positions)
+            let won = true;
+            for (let i = 0; i < pairs; i++) {
+                if (boardState[i] !== -1) won = false;
+            }
+            for (let i = boardState.length - pairs; i < boardState.length; i++) {
+                if (boardState[i] !== 1) won = false;
+            }
+
+            if (won) {
+                playSound('win');
+                if (currentLevel < 5 && currentLevel >= maxUnlockedLevel) {
+                    maxUnlockedLevel = currentLevel + 1;
+                    // Atualiza imediatamente o estilo da próxima fase desbloqueada.
+                    updateUIStats();
+                }
+                document.getElementById('victory-moves').textContent = movesCount;
+                if (currentLevel === 5) {
+                    document.getElementById('next-level-btn').style.display = 'none';
+                    document.getElementById('victory-text').textContent = 'Incrível! Você concluiu todas as 5 fases e salvou a lagoa inteira!';
+                } else {
+                    document.getElementById('next-level-btn').style.display = 'block';
+                    document.getElementById('victory-text').textContent = `Você ajudou os sapinhos na Fase ${currentLevel} em ${movesCount} movimentos!`;
+                }
+                openModal('victoryModal');
+                return;
+            }
+
+            // Check Deadlock Condition:
+            // Is any move possible? If no frog can move forward (adjacent empty or jump empty), deadlock occurs.
+            if (!canAnyFrogMove()) {
+                openModal('gameOverModal');
+            }
+        }
+
+        function canAnyFrogMove() {
+            for (let i = 0; i < boardState.length; i++) {
+                const val = boardState[i];
+                if (val === 0) continue;
+                const step = val; // 1 for right, -1 for left
+
+                // Check adjacent
+                if (boardState[i + step] === 0) return true;
+                // Check jump
+                if (boardState[i + (step * 2)] === 0 && boardState[i + step] !== 0) return true;
+            }
+            return false;
+        }
+
+        function switchLevel(lvl) {
+            if (lvl <= maxUnlockedLevel) {
+                loadLevel(lvl);
+            } else {
+                showFeedback("Conclua a fase anterior para desbloquear esta fase!");
+            }
+        }
+
+        function resetCurrentLevel() {
+            loadLevel(currentLevel);
+        }
+
+        function nextLevel() {
+            if (currentLevel < 5) {
+                loadLevel(currentLevel + 1);
+            }
+            closeModal('victoryModal');
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // Initialize game on window load
+        window.onload = function() {
+            loadLevel(1);
+        };
+    </script>
+</body>
+</html>
